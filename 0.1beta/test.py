@@ -40,8 +40,8 @@ def load_file(pth):
     memory = {}
     for file in os.listdir(pth):
         file_path = os.path.join(pth, file)
-        if os.path.isfile(file_path) and file.endswith(('.png', '.jpg', '.jpeg')):
-            memory[file] = cv2.imread(file_path)
+        if os.path.isfile(file_path) and file.endswith('.png'):
+            memory[str(file).split('.')[0]] = cv2.imread(file_path)
     return memory
 
 def convert_img(path):
@@ -94,11 +94,14 @@ def connect():
     os.environ["Path"] += f";{adb_pth}"
     os.system(f"adb connect {ip}:{port}")
 
-def tap(x, y, time_interval=0.5):
-    os.system(f"adb shell input tap {x} {y}")
-    #time.sleep(time_interval)
-
 if __name__ == '__main__':
     connect()
-    servant_type = 6
-    tap(115+84*(servant_type-1), 162)
+    system_flag = load_file('./resources/system')
+    support_collection = load_file('./resources/system/support')
+    if system_flag and support_collection:
+        print("资源加载成功")
+    else:
+        print("资源加载失败")
+        exit()
+    print(system_flag.keys())
+    print(support_collection.keys())
