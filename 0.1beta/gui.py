@@ -21,7 +21,7 @@ from PyQt5.QtWidgets import QApplication, QTextBrowser, QComboBox
 from PyQt5.QtGui import QPixmap, QIcon
 import os
 import json
-from main import *
+from function_collection import *
 
 order_list = []       # 重中之重
 order_mode = False    # 选择模式Flag

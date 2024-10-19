@@ -44,14 +44,14 @@ def compare_img(x1, x2, y1, y2, compare_img, min=0.9):
     compare_img:    需要对比的图片
     '''
     screen_shot(x1, x2, y1, y2)
-    compare_img = cv2.cvtColor(compare_img, cv2.COLOR_BGR2GRAY).\
-        calcHist([compare_img], [0], None, [256], [0, 256]).\
-            normalize(compare_img, compare_img, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
-    target_img = cv2.imread("resources/system/temp.png").\
-        resize(target_img, (compare_img.shape[1], compare_img.shape[0])).\
-            cvtColor(target_img, cv2.COLOR_BGR2GRAY).\
-                calcHist([target_img], [0], None, [256], [0, 256]).\
-                    normalize(target_img, target_img, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
+    compare_img = cv2.cvtColor(compare_img, cv2.COLOR_BGR2GRAY)
+    target_img = cv2.imread("resources/system/temp.png")
+    target_img = cv2.resize(target_img, (compare_img.shape[1], compare_img.shape[0]))
+    compare_img = cv2.calcHist([compare_img], [0], None, [256], [0, 256])
+    compare_img = cv2.normalize(compare_img, compare_img, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
+    target_img = cv2.cvtColor(target_img, cv2.COLOR_BGR2GRAY)
+    target_img = cv2.calcHist([target_img], [0], None, [256], [0, 256])
+    target_img = cv2.normalize(target_img, target_img, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
     
     result = cv2.compareHist(target_img, compare_img, cv2.HISTCMP_CORREL)
     os.remove("resources/system/temp.png")
@@ -226,5 +226,5 @@ if __name__ == "__main__":
             gc.collect()
             i += 1
             print(f"第{i}次结束")
-        result = input("是否继续？(y/n)")
+    result = input("是否继续？(y/n)")
 
