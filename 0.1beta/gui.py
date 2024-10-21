@@ -54,12 +54,27 @@ def change_servant_img(self, index):
         for i in range(len(servant_info_list)):
             getattr(self.ui, f'servant_list{i}').setEnabled(False)
         
-
 # 开启选择模式
 def start_order_mode(self):
     global order_mode
     order_mode = True
     self.ui.set.setText('下一回合')
+
+# 根据列表开始程序
+def start_battle(List):
+    for action in List:
+        command, *args = action
+        if command == 'skill':
+            use_skill(*args)
+        elif command == 'NP':
+            use_NP(*args)
+        elif command == 'master':
+            if len(args) == 1:
+                master_skill(*args)
+            elif len(i) == 2:
+                master_skill(args[0], target=args[1])
+            elif len(i) == 3:
+                master_skill(args[0], special1=args[1], special2=args[2])
 
 # 调用UI.ui文件，创建窗口
 class Stats:
@@ -82,6 +97,7 @@ class Stats:
         self.ui.servant_list5.currentIndexChanged.connect(lambda: change_servant_img(self, 5))
         
         # 初始化
+        self.ui.set.clicked.connect()
 
 app = QApplication([])
 stats = Stats()

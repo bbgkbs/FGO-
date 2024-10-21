@@ -1,7 +1,7 @@
 {
     "name": "阿尔托莉雅(Caster)",
     "skill_1_step": 1,
-    "skill_2_step": 1,
-    "skill_3_step": 1,
+    "skill_2_step": 2,
+    "skill_3_step": 2,
     "img_pth": "image/阿尔托莉雅(Caster).png"
 }

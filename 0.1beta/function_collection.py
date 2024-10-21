@@ -12,6 +12,7 @@ ip = "127.0.0.1"
 port = 16384
 w_w = 1600
 w_h = 900
+temp = 'resources/system/temp.png'
 
 # 一级函数
 def tap(x, y, time_interval=0.5):
@@ -45,7 +46,7 @@ def compare_img(x1, x2, y1, y2, compare_img, min=0.9):
     '''
     screen_shot(x1, x2, y1, y2)
     compare_img = cv2.cvtColor(compare_img, cv2.COLOR_BGR2GRAY)
-    target_img = cv2.imread("resources/system/temp.png")
+    target_img = cv2.imread(temp)
     target_img = cv2.resize(target_img, (compare_img.shape[1], compare_img.shape[0]))
     compare_img = cv2.calcHist([compare_img], [0], None, [256], [0, 256])
     compare_img = cv2.normalize(compare_img, compare_img, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
@@ -190,6 +191,40 @@ def start(first_time=False):
         tap(1488, 845)
 
 # 测试
+def start_battle(List):
+    for action in List:
+        command, *args = action
+        if command == 'skill':
+            use_skill(*args)
+        elif command == 'NP':
+            use_NP(*args)
+        elif command == 'master':
+            if len(args) == 1:
+                master_skill(*args)
+            elif len(i) == 2:
+                master_skill(args[0], target=args[1])
+            elif len(i) == 3:
+                master_skill(args[0], special1=args[1], special2=args[2])
+
+order_list = [['skill', 1, 1],
+              ['skill', 1, 3], 
+              ['skill', 2, 3, 1],
+              ['skill', 3, 3, 1],
+              ['NP', 1],
+
+              ['skill', 2, 1],
+              ['skill', 2, 2, 1],
+              ['skill', 3, 2, 1],
+              ['NP', 1],
+
+              ['skill', 3, 1],
+              ['master', 3, 3, 5],
+              ['master', 1],
+              ['skill', 3, 1, 1],
+              ['skill', 3, 2],
+              ['skill', 3, 3],
+              ['NP', 1]]
+
 if __name__ == "__main__":
     connect()
     system_flag = load_file('./resources/system')
@@ -201,30 +236,17 @@ if __name__ == "__main__":
         exit()
     i = 0
     result = input("开始？(y/n)")
-    while result == "y":
-        while i < 10:
-            choose_support(6)
-            if(i == 0):
-                start(True)
+    if result == "y":
+        #while i < 10:
+            #choose_support(6)
+            # if(i == 0):
+            #     start(True)
             wait(1)
-            use_skill(1,1)
-            use_skill(1,3)
-            use_skill(2,3,1)
-            use_skill(3,3,1)
-            use_NP(1)
-
-            use_skill(2,1)
-            use_skill(2,2,1)
-            use_skill(3,1)
-            use_NP(1)
-
-            use_skill(3,2,1)
-            #use_skill(3,3,1)
-            master_skill(1)
-            use_NP(1, end=True)
+            start_battle(order_list)
             continue_battle()
             gc.collect()
             i += 1
             print(f"第{i}次结束")
+            exit()
     result = input("是否继续？(y/n)")
 
