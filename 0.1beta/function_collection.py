@@ -201,9 +201,9 @@ def start_battle(List):
         elif command == 'master':
             if len(args) == 1:
                 master_skill(*args)
-            elif len(i) == 2:
+            elif len(args) == 2:
                 master_skill(args[0], target=args[1])
-            elif len(i) == 3:
+            elif len(args) == 3:
                 master_skill(args[0], special1=args[1], special2=args[2])
 
 order_list = [['skill', 1, 1],
