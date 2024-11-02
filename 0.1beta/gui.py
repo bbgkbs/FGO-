@@ -12,6 +12,7 @@ GUI代码部分，内容如下：
 10. 后续打算放个下拉列表，通过端口列表获取模拟器端口，而不是直接内置默认参数
 11. 突然想起来有像宇宙凛那样的特殊二次选项，或者外星大姐头超长按键时长，难顶(悲)
 12. 又突然想起来可能需要多线程来紧急暂停当前行动耶
+13. 可以通过输出json文件达到缓存选择的效果，然后在读取，暂定在system文件夹下
 '''
 
 # 初始化各种乱七八糟的东西
@@ -26,6 +27,7 @@ from function_collection import *
 order_list = []       # 重中之重
 order_mode = False    # 选择模式Flag
 battle_start = False  # 判断'启动！'按钮是否按下
+use_apple = False     # 判断是否使用金苹果
 
 # 各种组件的内部函数
 # 遍历json_collection中的文件得到所有从者信息的列表
@@ -60,22 +62,6 @@ def start_order_mode(self):
     order_mode = True
     self.ui.set.setText('下一回合')
 
-# 根据列表开始程序
-def start_battle(List):
-    for action in List:
-        command, *args = action
-        if command == 'skill':
-            use_skill(*args)
-        elif command == 'NP':
-            use_NP(*args)
-        elif command == 'master':
-            if len(args) == 1:
-                master_skill(*args)
-            elif len(i) == 2:
-                master_skill(args[0], target=args[1])
-            elif len(i) == 3:
-                master_skill(args[0], special1=args[1], special2=args[2])
-
 # 调用UI.ui文件，创建窗口
 class Stats:
     def __init__(self):
@@ -89,15 +75,28 @@ class Stats:
             for j in range(len(servant_info_list)):
                 getattr(self.ui, f'servant_list{i}').addItem(servant_info_list[j][0])
 
-        # 初始化从者列表及从者按钮
+        # 初始化从者和礼装列表
         self.ui.servant_list1.currentIndexChanged.connect(lambda: change_servant_img(self, 1))
         self.ui.servant_list2.currentIndexChanged.connect(lambda: change_servant_img(self, 2))
         self.ui.servant_list3.currentIndexChanged.connect(lambda: change_servant_img(self, 3))
         self.ui.servant_list4.currentIndexChanged.connect(lambda: change_servant_img(self, 4))
         self.ui.servant_list5.currentIndexChanged.connect(lambda: change_servant_img(self, 5))
+        '''
+        礼装列表设置
+        '''
+
+        # 初始化功能按键
+        self.ui.set.clicked.connect(lambda: start_battle(order_list))
+        '''
+        金苹果按钮设置
+        作战次数按钮设置
+        添加助战素材按钮设置
+        (未来)
+        下拉端口选择菜单设置
+        连接按钮设置
+
+        '''
         
-        # 初始化
-        self.ui.set.clicked.connect()
 
 app = QApplication([])
 stats = Stats()

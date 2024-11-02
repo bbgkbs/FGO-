@@ -1,3 +1,8 @@
+# 待更新日志
+# 1. 发现通过*args传参会导致部分参数赋值错位，目前发现的问题在use_NP那
+# 2. 完成后需要打包成.exe文件，具体看以前的代码，现在忘了
+# 3. 打包的是gui.py
+
 # 导入需要的库
 import time
 import os
@@ -58,7 +63,7 @@ def compare_img(x1, x2, y1, y2, compare_img, min=0.9):
     os.remove("resources/system/temp.png")
     return result >= min
 
-def locate_img(compare_img, min=0.9, return_str='匹配成功'):
+def locate_img(compare_img, min=0.95, return_str='匹配成功'):
     # 通过opencv的matchTemolate定位图片位置
     screen_shot()
     background = cv2.imread("resources/system/temp.png")
@@ -81,10 +86,10 @@ def connect():
     os.environ["Path"] += f";{adb_pth}"
     os.system(f"adb connect {ip}:{port}")
     devices_output = os.popen("adb devices").read()
-    if "device" in devices_output:
-        print("连接成功，设备在线")
-    else:
-        print("未能连接到设备，请确认设备已开启")
+    if 'offline' in devices_output or ip not in devices_output:
+        print("连接失败")
+        exit()
+    else: print("连接成功")
 
 def load_file(pth):
     memory = {}
@@ -105,13 +110,13 @@ def choose_support(servant_type):
     count = 0           # 滑了三次没找到就刷新
     while True:
         if(count == 3):
-            tap(1157, 158)
+            tap(1157, 158, time_interval=1)
             tap(1057, 711)
             count = 0
             time.sleep(5)
         for i in support_collection.values():
             if locate_img(i, return_str='找到助战了'): return
-        swipe(20, 700, 20, 140, 1500)
+        swipe(20, 700, 20, 200, 1000)
         count += 1
 
 def wait(Time=20, x1=1462, x2=1524, y1=222, y2=290, end=False):
@@ -138,7 +143,7 @@ def use_skill(servant, skill, target=None, special2=None, special3=None):
     wait(Time=1.5)
 
 def use_NP(servant1, servant2=None, servant3=None, end=False):
-    tap(1429, 774, 0.75)
+    tap(1429, 774, 1)
     tap(519 + (servant1-1) * 287, 283, 0.25)
     if servant2 is not None:
         tap(519 + (servant1-1) * 287, 283, 0.25)
@@ -166,22 +171,31 @@ def master_skill(skill, target=None, special1=None, special2=None):
         tap(189+(special2-1)*231, 496, 0.25)
         tap(800, 829, 0.75)
     tap(1140 + (skill-1)*111, 410)
-    wait(Time=1)
+    wait(Time=1.5)
 
 def continue_battle():
     global system_flag
     flag = True
-    while flag:
+    while flag: 
         if compare_img(934, 1152, 681, 731, system_flag['continue']):
-            flag = False
+            print("战斗结束")
             tap(1034, 717)
-            time.sleep(5)
-        elif compare_img(546, 1050, 42, 118, system_flag['low_power']): #用补充体力时的标题来当定位
+            time.sleep(1)
             flag = False
-            print("体力不足")
-        else: 
+            if compare_img(392, 541, 147, 670, system_flag['low_power']): #用补充体力时的标题来当定位
+                print("体力不足")
+                # 暂时代码
+                tap(826, 407, time_interval=1)
+                tap(1037, 705)
+                # exit()
+            time.sleep(5)
+        elif compare_img(1011, 1365, 735, 801, system_flag['full_support']):
+            print("助战满了")
+            tap(419, 766)
+            time.sleep(1)
+        else:
             tap(1358, 801)
-            time.sleep(0.5)
+            time.sleep(1)
 
 def start(first_time=False):
     global system_flag
@@ -190,7 +204,7 @@ def start(first_time=False):
         time.sleep(1)
         tap(1488, 845)
 
-# 测试
+# 根据传入指令列表开始战斗
 def start_battle(List):
     for action in List:
         command, *args = action
@@ -206,24 +220,23 @@ def start_battle(List):
             elif len(args) == 3:
                 master_skill(args[0], special1=args[1], special2=args[2])
 
-order_list = [['skill', 1, 1],
-              ['skill', 1, 3], 
-              ['skill', 2, 3, 1],
+order_list = [['skill', 1, 3], 
+              ['skill', 3, 2, 1],
               ['skill', 3, 3, 1],
-              ['NP', 1],
+              ['NP', 1, None, None, False],
+
+              ['skill', 1, 1],
+              ['skill', 2, 2, 1],
+              ['skill', 3, 1, 1],
+              ['NP', 1, None, None, False],
 
               ['skill', 2, 1],
-              ['skill', 2, 2, 1],
-              ['skill', 3, 2, 1],
-              ['NP', 1],
-
-              ['skill', 3, 1],
-              ['master', 3, 3, 5],
+              ['master', 3, 3, 6],
               ['master', 1],
-              ['skill', 3, 1, 1],
-              ['skill', 3, 2],
-              ['skill', 3, 3],
-              ['NP', 1]]
+              ['skill', 3, 1],
+              ['skill', 3, 2, 1],
+              ['skill', 3, 3, 1],
+              ['NP', 1, None, None, True]]
 
 if __name__ == "__main__":
     connect()
@@ -234,19 +247,17 @@ if __name__ == "__main__":
     else:
         print("资源加载失败")
         exit()
-    i = 0
     result = input("开始？(y/n)")
-    if result == "y":
-        #while i < 10:
-            #choose_support(6)
-            # if(i == 0):
-            #     start(True)
+    while result == "y":
+        i = 1
+        while i < 21:
+            choose_support(7)
+            if(i == 1):
+                start(True)
             wait(1)
             start_battle(order_list)
             continue_battle()
             gc.collect()
-            i += 1
             print(f"第{i}次结束")
-            exit()
-    result = input("是否继续？(y/n)")
-
+            i += 1
+        result = input("是否继续？(y/n)")

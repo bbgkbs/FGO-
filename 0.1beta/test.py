@@ -1,6 +1,9 @@
 import cv2
 import os
 import numpy as np
+from collections import deque
+import time
+import heapq
 
 adb_tool_pth = "./adb_tool/platform-tools"
 python_pth = "./python"
@@ -8,6 +11,7 @@ ip = "127.0.0.1"
 port = 16384
 w_w = 1600
 w_h = 900
+temp = 'resources/system/temp.png'
 
 def isValid(s):
     """
@@ -36,6 +40,31 @@ def longestCommonPrefix(strs):
                 return ""
     return prefix
 
+class TreeNode(object):
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+def kthLargestLevelSum(root, k):
+    if not root:
+        return -1
+    level_sums = []
+    queue = deque([root])
+    while queue:
+        level_sum = 0
+        for _ in range(len(queue)):
+            node = queue.popleft()
+            level_sum += node.val
+            if node.left:
+                queue.append(node.left)
+            if node.right:
+                queue.append(node.right)
+        level_sums.append(level_sum)
+    if len(level_sums) < k:
+        return -1
+    return heapq.nlargest(k, level_sums)[-1]
+
 def load_file(pth):
     memory = {}
     for file in os.listdir(pth):
@@ -59,36 +88,39 @@ def screen_shot(x1, x2, y1, y2, usage_name="temp"):
     img = img[y1:y2, x1:x2]
     cv2.imwrite(img_pth, img)
 
-def locate_img(target, min=0.9):
-    screen_shot(0, w_w, 0, w_h)
-    background = cv2.imread("resources/system/temp.png")
-    if target is None:
-        print(f"Error: 不存在'{target}")
-        return
-    result = cv2.matchTemplate(target, background, cv2.TM_CCOEFF_NORMED)
-    loc = np.where(result >= min)
-    if(len(loc[0]) > 0):
-        os.remove("resources/system/temp.png")
-        print("匹配成功")
-        #tap(int(np.mean(loc[1])+target.shape[1]/2), int(np.mean(loc[0])+target.shape[0]/2))
-        return True
-    else:
-        print("匹配失败")
-        return False
+def compare_img(x1, x2, y1, y2, compare_img, min=0.9):
+    '''
+    x1, x2, y1, y2: 截图区域
+    compare_img:    需要对比的图片
+    '''
+    screen_shot(x1, x2, y1, y2)
+    compare_img = cv2.cvtColor(compare_img, cv2.COLOR_BGR2GRAY)
+    target_img = cv2.imread(temp)
+    target_img = cv2.resize(target_img, (compare_img.shape[1], compare_img.shape[0]))
+    compare_img = cv2.calcHist([compare_img], [0], None, [256], [0, 256])
+    compare_img = cv2.normalize(compare_img, compare_img, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
+    target_img = cv2.cvtColor(target_img, cv2.COLOR_BGR2GRAY)
+    target_img = cv2.calcHist([target_img], [0], None, [256], [0, 256])
+    target_img = cv2.normalize(target_img, target_img, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
     
-def choose_support(support_collection):
-    count = 0
-    while True:
-        #if(count == 3):
-            #tap(1157, 158)
-            #tap(1057, 711)
-            #count = 0
-            #time.sleep(5)
-        for i in support_collection.values():
-            if locate_img(i): return
-        #swipe(20, 700, 20, 140, 1500)
-        #count += 1
-    
+    result = cv2.compareHist(target_img, compare_img, cv2.HISTCMP_CORREL)
+    os.remove("resources/system/temp.png")
+    return result >= min
+
+def continue_battle():
+    global system_flag
+    flag = True
+    while flag:
+        if compare_img(392, 541, 147, 670, system_flag['low_power']): #用补充体力时的标题来当定位
+            flag = False
+            print("体力不足")
+            exit()
+        elif compare_img(934, 1152, 681, 731, system_flag['continue']):
+            flag = False
+            time.sleep(5)     
+        else: 
+            time.sleep(0.5)
+
 def connect():
     adb_pth = os.path.abspath(adb_tool_pth)
     os.environ["Path"] += f";{adb_pth}"
@@ -96,12 +128,6 @@ def connect():
 
 if __name__ == '__main__':
     connect()
-    system_flag = load_file('./resources/system')
-    support_collection = load_file('./resources/system/support')
-    if system_flag and support_collection:
-        print("资源加载成功")
-    else:
-        print("资源加载失败")
-        exit()
-    print(system_flag.keys())
-    print(support_collection.keys())
+    screen_shot(1157, 1436, 842, 880, 'no_wifi')
+
+# 1157, 1436, 842, 880
