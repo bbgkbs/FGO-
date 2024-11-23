@@ -1,0 +1,119 @@
+常用控件
+
+**按钮**
+button.clicked.connect(func)              点击后使用函数
+      .setText(text)                      改变按钮文本
+      .setEnabled(bool)                   设置是否可用
+      .setIcon(QIcon(img_pth))            设置按钮图标
+      .setIconSize(QSize(width, height))  设置图标大小
+
+**单行文本框**
+edit.textChanged.connect(func)            文本改变后使用函数
+    .returnPressed.connect(func)          使用回车后使用函数
+    .text()                               获取文本
+    .setPlaceholderText(text)             设置place holder(html搞过)
+    .setText(text)                        设置默认文本
+    .clear()                              清空文本
+    .copy()                               复制文本，类似直接复制到电脑的剪贴板
+    .paste()                              粘贴文本，粘贴电脑剪贴板的内容
+
+**多行纯文本框**
+edit.textChanged.connect(func)            文本改变后使用函数
+    .cursorPositionChanged(func)          文本框内光标变动使用函数
+    .toPlainText()                        获取文本
+    .setPlaceholderText(text)             设置place holder(html搞过)
+    .setPlainText(text)                   设置文本，清除当前的内容
+    .appendPlainText(text)                在末尾添加内容，然后换行
+    .clear()                              清空文本
+    .copy()                               复制文本
+    .paste()                              粘贴文本
+    .document().setMaximumBlockCount(num) 设置文本框最大行数
+
+**文本浏览框**
+大多函数和多行纯文本框一样，除了以下函数
+textBrowser.append(text)                  在末尾添加文本
+           .ensureCursorVisible()         确保光标可见，会自动换行
+
+**标签**
+基本不用动的元素，可以在Qt designer里面的pixmap里面设置图片
+label.setText(text)                       设置文本
+     .text()                              获取文本
+
+**组合选择框**
+cbox.currentIndexChanged.connect(func)    选项改变后使用函数
+    .addItem(text)                        添加选项
+    .addItems(List)                       添加多个选项
+    .clear()                              清空所有
+    .currentText()                        获取当前选项的文本
+
+**列表**
+ListWidget.addItem(item)                  添加列表项
+          .addItems(List)                 添加多个列表项
+          .takeItem(row)                  删除row行的列表项
+          .row(item)                      设置需求选项在第几行
+          .clear()                        清空所有列表项
+          .setCurrentItem(item)           设置当前选项
+          .currentItem().text()           获取当前列表项文本
+          .item(row).text()               获取第row行列表项文本
+
+**表格**
+table.insertRow(row)                      在第row行插入新行
+     .removeRow(row)                      删除第row行
+     
+    //若没有内容
+     .setItem(row, column, QTableWidgetItem(text)) 设置第row行第column列的内容
+    //有内容
+     .item(row, column).setText(text)     设置第row行第column列的内容
+
+     .item(row, column).text()            获取第row行第column列的内容
+     .setFlags(Qt.ItemIsEnabled)          设置单元格不可编辑
+     .rowCount()                          获取行数
+     .columnCount()                       获取列数
+     .setRowCount(num)                    设置行数
+     .setColumnCount(num)                 设置列数
+     .clearContents()                     清空表格内容
+
+**单选按钮(组)**
+buttongroup.buttonClicked.connect(func)   按钮点击后调用函数
+           .checkedButton().text()        获取当前选中的按钮
+
+**勾选按钮(组)**
+buttongroup.buttonClicked.connect(func)   按钮点击后调用函数
+        .checkedButton().text()           获取当前选中的按钮
+        .button(i).isChecked()            获取第i个按钮是否被选中
+
+**进度条**
+progressBar.setRange(num1, num2)          设置进度条范围
+           .setValue(num)                 设置目前进度条值
+           .reset()                       重置进度条
+
+**数字输入框**
+box.value()                               获取当前数字输入
+   .setValue(num)                         设置数字输入
+
+**日期控件**
+dateEdit.date().toString('yyyy-MM-dd')    获取当前日期
+               .year()                    获取年份
+               .month()                   获取月份
+               .day()                     获取日期
+
+**选择文件框**
+path = fileDialog.getExistingDirectory(self.ui,  选择储存文件夹路径，取消返回空字符串
+                                       "选择存储路径")
+          
+path, _ = fileDialog.getSaveFileName(self.ui,       保存文件
+                                     "选择文件",     
+                                     path,          起始文件路径
+                                     filter)        文件类型过滤，比如*.img
+
+                    .getOpenFileName(self.ui,       选择已存在文件
+                                     "保存文件",     
+                                     path,          起始文件路径
+                                     filter)        文件类型过滤，比如*.json
+
+                    .getOpenFileNames(self.ui,      选择多个已存在文件，返回一个列表
+                                     "保存文件",     
+                                     path,          起始文件路径
+                                     filter)        文件类型过滤，比如*.json
+
+****

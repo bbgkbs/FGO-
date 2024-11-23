@@ -1,8 +1,3 @@
-# 待更新日志
-# 1. 发现通过*args传参会导致部分参数赋值错位，目前发现的问题在use_NP那
-# 2. 完成后需要打包成.exe文件，具体看以前的代码，现在忘了
-# 3. 打包的是gui.py
-
 # 导入需要的库
 import time
 import os
@@ -19,77 +14,46 @@ w_w = 1600
 w_h = 900
 temp = 'resources/system/temp.png'
 
-# 一级函数
-def tap(x, y, time_interval=0.5):
-    os.system(f"adb shell input tap {x} {y}")
-    time.sleep(time_interval)
+class Servant:
+    def __init__(self, name, skill1, skill2, skill3, img_pth):
+        '''
+        name:      名称
+        skill1:    技能1步骤数量
+        skill2:    技能2步骤数量
+        skill3:    技能3步骤数量
+        img_pth:   从者图片路径
+        '''
+        self.name = name
+        self.skill1 = skill1
+        self.skill2 = skill2
+        self.skill3 = skill3
+        self.img_pth = img_pth
 
-def swipe(x1, y1, x2, y2, duration=500, time_interval=0.5):
-    os.system(f"adb shell input swipe {x1} {y1} {x2} {y2} {duration}")
-    time.sleep(time_interval)
-
-def screen_shot(x1=0, x2=w_w, y1=0, y2=w_h, usage_name="temp"):
-    img_pth = f"resources/system/{usage_name}.png"
-    os.system(f"adb shell screencap -p > {img_pth}")
-    convert_img(img_pth)
-    img = cv2.imread(img_pth)
-    img = img[y1:y2, x1:x2]
-    cv2.imwrite(img_pth, img)
-
-def convert_img(path):
-    # adb截图后和windows默认的换行符不符，需要额外处理
-    with open(path, "br") as f:
-        bys = f.read()
-        bys_ = bys.replace(b"\r\n",b"\n")
-    with open(path, "bw") as f:
-        f.write(bys_)
-
-def compare_img(x1, x2, y1, y2, compare_img, min=0.9):
-    '''
-    x1, x2, y1, y2: 截图区域
-    compare_img:    需要对比的图片
-    '''
-    screen_shot(x1, x2, y1, y2)
-    compare_img = cv2.cvtColor(compare_img, cv2.COLOR_BGR2GRAY)
-    target_img = cv2.imread(temp)
-    target_img = cv2.resize(target_img, (compare_img.shape[1], compare_img.shape[0]))
-    compare_img = cv2.calcHist([compare_img], [0], None, [256], [0, 256])
-    compare_img = cv2.normalize(compare_img, compare_img, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
-    target_img = cv2.cvtColor(target_img, cv2.COLOR_BGR2GRAY)
-    target_img = cv2.calcHist([target_img], [0], None, [256], [0, 256])
-    target_img = cv2.normalize(target_img, target_img, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
+    def __str__(self):
+        return self.name
     
-    result = cv2.compareHist(target_img, compare_img, cv2.HISTCMP_CORREL)
-    os.remove("resources/system/temp.png")
-    return result >= min
+    def getSkill_step(self, num):
+        if num == 1:
+            return self.skill1
+        elif num == 2:
+            return self.skill2
+        elif num == 3:
+            return self.skill3
+        else:
+            return None
+    
+    def getImg_pth(self):
+        return self.img_pth
 
-def locate_img(compare_img, min=0.95, return_str='匹配成功'):
-    # 通过opencv的matchTemolate定位图片位置
-    screen_shot()
-    background = cv2.imread("resources/system/temp.png")
-    if compare_img is None:
-        print(f"Error: '{compare_img}'图片不存在")
-        return
-    result = cv2.matchTemplate(compare_img, background, cv2.TM_CCOEFF_NORMED)
-    loc = np.where(result >= min)
-    if(len(loc[0]) > 0):
-        os.remove("resources/system/temp.png")
-        print(return_str)
-        tap(int(np.mean(loc[1])+compare_img.shape[1]/2), int(np.mean(loc[0])+compare_img.shape[0]/2))
-        return True
-    else:
-        return False
-
-# 二级函数，被调用的
+#######################   连接部分  ############################
 def connect():
     adb_pth = os.path.abspath(adb_tool_pth)
     os.environ["Path"] += f";{adb_pth}"
     os.system(f"adb connect {ip}:{port}")
     devices_output = os.popen("adb devices").read()
     if 'offline' in devices_output or ip not in devices_output:
-        print("连接失败")
-        exit()
-    else: print("连接成功")
+        return False
+    else: return True
 
 def load_file(pth):
     memory = {}
@@ -99,12 +63,65 @@ def load_file(pth):
             memory[str(file).split('.')[0]] = cv2.imread(file_path)
     return memory
 
+####################### 图像处理部分 ############################
+def screen_shot(x1=0, x2=w_w, y1=0, y2=w_h, usage_name="temp"):
+    img_pth = f"resources/system/{usage_name}.png"
+    os.system(f"adb shell screencap -p > {img_pth}")
+    with open(img_pth, "br") as f:
+        bys = f.read()
+        bys_ = bys.replace(b"\r\n",b"\n")
+    with open(img_pth, "bw") as f:
+        f.write(bys_)
+    img = cv2.imread(img_pth)
+    img = img[y1:y2, x1:x2]
+    cv2.imwrite(img_pth, img)
+
+def compare_img(x1, x2, y1, y2, compare_img, min=0.9):
+    screen_shot(x1, x2, y1, y2)
+    compare_img = cv2.cvtColor(compare_img, cv2.COLOR_BGR2GRAY)
+    target_img = cv2.imread(temp)
+    target_img = cv2.resize(target_img, (compare_img.shape[1], compare_img.shape[0]))
+    compare_img = cv2.calcHist([compare_img], [0], None, [256], [0, 256])
+    compare_img = cv2.normalize(compare_img, compare_img, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
+    target_img = cv2.cvtColor(target_img, cv2.COLOR_BGR2GRAY)
+    target_img = cv2.calcHist([target_img], [0], None, [256], [0, 256])
+    target_img = cv2.normalize(target_img, target_img, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
+    result = cv2.compareHist(target_img, compare_img, cv2.HISTCMP_CORREL)
+    os.remove("resources/system/temp.png")
+    return result >= min
+
+def locate_img(compare_img, min=0.95):
+    screen_shot()
+    background = cv2.imread("resources/system/temp.png")
+    if compare_img is None:
+        print(f"Error: '{compare_img}'图片不存在")
+        return
+    result = cv2.matchTemplate(compare_img, background, cv2.TM_CCOEFF_NORMED)
+    loc = np.where(result >= min)
+    if(len(loc[0]) > 0):
+        os.remove("resources/system/temp.png")
+        tap(int(np.mean(loc[1])+compare_img.shape[1]/2), int(np.mean(loc[0])+compare_img.shape[0]/2))
+        return True
+    else:
+        return False
+
+#######################   UI部分    ############################
+
+
+#######################   战斗部分  ############################
+def tap(x, y, time_interval=0.5):
+    os.system(f"adb shell input tap {x} {y}")
+    time.sleep(time_interval)
+
+def swipe(x1, y1, x2, y2, duration=500, time_interval=0.5):
+    os.system(f"adb shell input swipe {x1} {y1} {x2} {y2} {duration}")
+    time.sleep(time_interval)
+
 def choose_support(servant_type):
     '''
     servant_type: 助战从者的职介，从左往右
     '''
     global support_collection
-
     tap(115+84*(servant_type-1), 162)
     time.sleep(0.5)
     count = 0           # 滑了三次没找到就刷新
@@ -203,7 +220,6 @@ def start(first_time=False):
         time.sleep(1)
         tap(1488, 845)
 
-# 根据传入指令列表开始战斗
 def start_battle(List):
     for action in List:
         command, *args = action
@@ -219,59 +235,5 @@ def start_battle(List):
             elif len(args) == 3:
                 master_skill(args[0], special1=args[1], special2=args[2])
 
-order_list = [['skill', 1, 3], 
-              ['skill', 3, 2, 1],
-              ['skill', 3, 3, 1],
-              ['NP', 1, None, None, False],
-
-              ['skill', 1, 1],
-              ['skill', 2, 2, 1],
-              ['skill', 3, 1, 1],
-              ['NP', 1, None, None, False],
-
-              ['skill', 2, 1],
-              ['master', 3, 3, 4],
-              ['master', 1],
-              ['skill', 3, 1],
-              ['skill', 3, 2, 1],
-              ['skill', 3, 3, 1],
-              ['NP', 1, None, None, True]]
-
-order_list_temp = [['skill', 1, 3],
-                   ['skill', 2, 3, 1],
-                   ['skill', 3, 3, 1],
-                   ['NP', 1, None, None, False],
-                   
-                   ['skill', 1, 1],
-                   ['skill', 2, 2, 1],
-                   ['skill', 3, 2, 1],
-                   ['skill', 3, 1],
-                   ['NP', 1, None, None, False],
-                   
-                   ['skill', 2, 1],
-                   ['master', 1],
-                   ['NP', 1, None, None, True]]
-
-if __name__ == "__main__":
-    connect()
-    system_flag = load_file('./resources/system')
-    support_collection = load_file('./resources/system/support')
-    if system_flag and support_collection:
-        print("资源加载成功")
-    else:
-        print("资源加载失败")
-        exit()
-    result = input("开始？(y/n)")
-    while result == "y":
-        # i = 0
-        # while i < 13:
-            # choose_support(7)
-            # if(i == 0):
-            #     start(True)
-            wait(1)
-            start_battle(order_list_temp)
-            # continue_battle()
-            gc.collect()
-            #i += 1
-            # print(f"第{i}次结束")
-            result = input("是否继续？(y/n)")
+if __name__ == '__main__':
+    test = Servant('test', 1, 2, 3, 'test.png')

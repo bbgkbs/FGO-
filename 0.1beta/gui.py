@@ -24,10 +24,9 @@ import os
 import json
 from function_collection import *
 
-order_list = []       # 重中之重
+order_list = []
 order_mode = False    # 选择模式Flag
 battle_start = False  # 判断'启动！'按钮是否按下
-use_apple = False     # 判断是否使用金苹果
 
 # 各种组件的内部函数
 # 遍历json_collection中的文件得到所有从者信息的列表
